@@ -32,7 +32,7 @@ var Cards = [
 { id: 14, image: base_url + 'planning%20poker_Yak%20Shaving.png' },
 ];
 
-var CardBack = base_url + "Cover%20-%20option%202.png"
+var CardBack = base_url + "Cover%20-%20option%202.png";
 
 var MiniCardComponent = React.createClass({
 
@@ -41,7 +41,7 @@ var MiniCardComponent = React.createClass({
   },
   
   render: function() {
-    var card = this.state.dataSource
+    var card = this.state.dataSource;
     return (
       <TouchableHighlight onPress={this._onPressCard}>
         <Image
@@ -53,7 +53,7 @@ var MiniCardComponent = React.createClass({
   },
 
   _onPressCard: function(){
-    return this.props.setBigCard(this.state.dataSource.id);
+    return this.props.setShow({display: 'bigCard', card: this.state.dataSource});
   },
 
 });
@@ -77,8 +77,7 @@ var BigCardComponent = React.createClass({
   },
 
   _onPressCard: function(){
-    console.log('big');
-    return this.props.showBigCard(false);
+    return this.props.setShow({display: 'deck', card: this.state.dataSource});
   },
 
 });
@@ -103,7 +102,7 @@ var DeckComponent = React.createClass({
       <MiniCardComponent 
         id={card.id} 
         dataSource={card}
-        setBigCard={this.props.setBigCard} 
+        setShow={this.props.setShow} 
       />
     );
   },
@@ -113,10 +112,10 @@ var DeckComponent = React.createClass({
 var PlannigPoker = React.createClass({
 
   getInitialState: function() {
-    return { dataSource: Cards, display: false };
+    return { dataSource: Cards, display: 'deck' };
   },
 
-  findById: function(id) {
+  findCardById: function(id) {
     for (var i = 0; i < Cards.length; i++) {
       if (Cards[i].id === id) {
         return Cards[i];
@@ -124,29 +123,38 @@ var PlannigPoker = React.createClass({
     }
   },
 
-  setBigCard: function(card_id) {
-    var card = this.findById(card_id);
-    this.setState({ display: true, card: card })
-  },
-
-  showBigCard: function(show) {
-    this.setState({ display: false })
+  setShow: function(state) {
+    this.setState({ display: state.display, card: state.card });
   },
 
   render: function(){
     var cards   = this.state.dataSource;
     var display = this.state.display;
     var card    = this.state.card;
-    console.log(card);
-    var bigCard = display ? <BigCardComponent dataSource={card} showBigCard={this.showBigCard} /> : <View />;
+    var showComponent;
+    switch (display) {
+      case 'deck':
+        showComponent = (
+          <DeckComponent 
+              dataSource={cards} 
+              style={styles.listView}
+              setShow={this.setShow}
+          />
+        );
+        break;
+      case 'bigCard':
+        showComponent = (
+          <BigCardComponent 
+            dataSource={card} 
+            setShow={this.setShow}
+          /> 
+        );
+        break;
+    }
+
     return ( 
       <View style={styles.app}>
-        {bigCard}
-        <DeckComponent 
-          dataSource={cards} 
-          style={styles.listView}
-          setBigCard={this.setBigCard}
-        />
+        {showComponent}
       </View>
     );
   },
@@ -156,16 +164,21 @@ var PlannigPoker = React.createClass({
 var styles = StyleSheet.create({
   app: {
     backgroundColor: '#000000',
+    alignItems: 'flex-start',
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
     paddingTop: 50,
-    paddingBottom: 130,
-    paddingLeft: 10,
   },
   deck: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    marginLeft: 15,
+    height: 460,
+    width: 360,
   },
   miniCard: {
     width: 70,
@@ -177,11 +190,13 @@ var styles = StyleSheet.create({
   bigCard: {
     width: 300,
     height: 400, 
+    borderRadius: 5,
   },
   wrap: {
-    position: 'absolute',
-    top: 0,
-    height: 500,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    flex: 1,
   }
 });
 
